@@ -42,7 +42,14 @@ export interface IWebviewEmbedPlugin {
 
     setActiveWebview(options: { webviewId: string }): Promise<void>;
 
-    evaluateJavaScript(options: {javascript: string}): Promise<{result: string}>;
+    /**
+     * Execute javascript in the webview.
+     *
+     * This method will only execute after the page has finished loading.
+     * @param options The options to pass to the method.
+     * @returns A promise that resolves with the result of the javascript execution.
+     */
+    executeScript(options: {webviewId: string, script: string}): Promise<{result: string}>;
 
     addListener(eventName: 
         'pageLoaded' | 

@@ -114,6 +114,8 @@ public class WebviewEmbedPlugin extends Plugin {
 
     private   HashMap<String, PluginCall> loadUrlCalls = new HashMap<>();
 
+    private   HashMap<String, PluginCall> executeScriptCalls = new HashMap<>();
+
     private MyHTTPD server;
     
     //private boolean webMessageEnabled = false;
@@ -275,6 +277,11 @@ public class WebviewEmbedPlugin extends Plugin {
                         if (loadUrlCalls.containsKey(webviewId)) {
                             loadUrlCalls.get(webviewId).success();
                             loadUrlCalls.remove(webviewId);
+                        }
+
+                        if (executeScriptCalls.containsKey(webviewId)) {
+                            executeScript(executeScriptCalls.get(webviewId));
+                            executeScriptCalls.remove(webviewId);
                         }
 
                         final JSObject ret = new JSObject();
@@ -604,11 +611,11 @@ public class WebviewEmbedPlugin extends Plugin {
     }
 
     @PluginMethod()
-    public void evaluateJavaScript(final PluginCall call) {
+    public void executeScript(final PluginCall call) {
         
         getActivity().runOnUiThread(() -> {
 
-            final String javascript = call.getString("javascript", "");
+            final String javascript = call.getString("script", "");
             String webviewId = call.getString("webviewId", "");
 
             if (javascript.isEmpty()) {
@@ -623,6 +630,11 @@ public class WebviewEmbedPlugin extends Plugin {
             if(_wv == null) {
                 object.put("result", "");
                 call.resolve(object);
+                return;
+            }
+
+            if (_wv.getProgress() < 100) {
+                executeScriptCalls.put(webviewId, call);
                 return;
             }
 

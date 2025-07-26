@@ -21,6 +21,8 @@ class WebviewOverlay: UIViewController, WKUIDelegate, WKNavigationDelegate {
 
     var loadUrlCall: CAPPluginCall?
 
+    var executeScriptCalls: [String: CAPPluginCall] = [:]
+
     init(_ plugin: WebviewOverlayPlugin, configuration: WKWebViewConfiguration) {
         super.init(nibName: "WebviewOverlay", bundle: nil)
         self.plugin = plugin
@@ -90,6 +92,11 @@ class WebviewOverlay: UIViewController, WKUIDelegate, WKNavigationDelegate {
             self.loadUrlCall = nil
         }
         plugin.notifyListeners("pageLoaded", data: [:])
+
+        if let call = self.executeScriptCalls[self.plugin.webviewOverlay.webview!.hash.description] {
+            self.plugin.executeScript(call)
+            self.executeScriptCalls.removeValue(forKey: self.plugin.webviewOverlay.webview!.hash.description)
+        }
 
         // Remove tap highlight
         let script = "function addStyleString(str) {" +
@@ -344,14 +351,18 @@ public class WebviewOverlayPlugin: CAPPlugin {
         }
     }
 
-    @objc func evaluateJavaScript(_ call: CAPPluginCall) {
+    @objc func executeScript(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
-            guard let javascript = call.getString("javascript") else {
+            guard let javascript = call.getString("script") else {
                 call.reject("Must provide javascript string")
                 return
             }
             if (self.webviewOverlay != nil) {
                 if (self.webviewOverlay.webview != nil) {
+                    if (self.webviewOverlay.webview?.estimatedProgress ?? 0) < 1 {
+                        self.webviewOverlay.executeScriptCalls[self.webviewOverlay.webview!.hash.description] = call
+                        return
+                    }
                     func eval(completionHandler: @escaping (_ response: String?) -> Void) {
                         self.webviewOverlay.webview?.evaluateJavaScript(String(javascript)) { (value, error) in
                             if error != nil {

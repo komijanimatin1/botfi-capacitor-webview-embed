@@ -197,9 +197,10 @@ class WebviewEmbedClass {
         WebviewEmbedPlugin.setActiveWebview({  webviewId })
     }
 
-    async evaluateJavaScript(javascript: string): Promise<string> {
-        return (await WebviewEmbedPlugin.evaluateJavaScript({
-            javascript
+    async executeScript(options: {webviewId: string, script: string}): Promise<string> {
+        return (await WebviewEmbedPlugin.executeScript({
+            webviewId: options.webviewId,
+            script: options.script,
         })).result;
     }
 

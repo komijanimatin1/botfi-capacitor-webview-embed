@@ -18,6 +18,44 @@ npx cap sync
 <!-- More info: https://github.com/ionic-team/capacitor-docgen -->
 </docgen-api>
 
+### `executeScript(options)`
+
+Execute javascript in the webview.
+
+This method will only execute after the page has finished loading.
+
+**Returns:** `Promise<{ result: string; }>`
+
+| Param         | Type                                      |
+| ------------- | ----------------------------------------- |
+| **`options`** | `{ webviewId: string; script: string; }` |
+
+
+**Example:**
+
+```typescript
+import { WebviewEmbed } from '@botfi-app/capacitor-webview-embed';
+
+const webview = new WebviewEmbed();
+
+const options = {
+  url: 'https://www.google.com',
+  element: document.getElementById('webview-container'),
+  webviewId: 'my-webview'
+};
+
+await webview.open(options);
+
+webview.onPageLoaded(() => {
+  webview.executeScript({
+    webviewId: 'my-webview',
+    script: 'document.body.style.backgroundColor = "red";'
+  }).then(result => {
+    console.log(result);
+  });
+});
+```
+
 ## Usage
 
 This plugin uses a custom Javascript frontend, so each instance of the `WebviewOverlay` class will control a separate webview. The plugin requires an empty HTML element to determine the position and dimensions of the webview. This element is also used to display a screen capture of the webview if you need to have any app UI elements overlay the webview at any time. See the example project for implementation.
